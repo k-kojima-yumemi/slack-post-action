@@ -1,5 +1,4 @@
 const core = require('@actions/core');
-const axios = require('axios');
 
 const NODE_ENV = process.env['NODE_ENV'];
 
@@ -138,18 +137,25 @@ async function run(input) {
 
   if (input.reportSha) {
     try {
-      const res = await axios({
-        url: `https://api.github.com/repos/${input.event.repository.full_name}/commits/${input.reportSha}`,
+      const res = await fetch(`https://api.github.com/repos/${input.event.repository.full_name}/commits/${input.reportSha}`, {
         headers: {
           'Authorization': `token ${input.githubToken}`,
         },
       });
-      input.authorName = res.data.author.login;
-      input.authorLink = res.data.author.html_url;
-      input.authorIcon = res.data.author.avatar_url;
-      const messages = res.data.commit.message.split('\n');
-      input.title = `${messages[0]} (${res.data.sha.slice(0, 8)})`;
-      input.titleLink = res.data.html_url;
+      if (!res.ok) {
+        if (res.status == 404) {
+          throw new Error('Commit data not found. "report-sha" input may not be correct.');
+        } else {
+          throw new Error(`GitHub API error (status: ${res.status}).`);
+        }
+      }
+      const data = await res.json();
+      input.authorName = data.author.login;
+      input.authorLink = data.author.html_url;
+      input.authorIcon = data.author.avatar_url;
+      const messages = data.commit.message.split('\n');
+      input.title = `${messages[0]} (${data.sha.slice(0, 8)})`;
+      input.titleLink = data.html_url;
       if (messages.length == 1) {
         input.body = '';
       } else {
@@ -157,31 +163,30 @@ async function run(input) {
         input.body = messages.join('\n');
       }
     } catch (e) {
-      if (e.response.status == 404) {
-        throw new Error('Commit data not found. "report-sha" input may not be correct.');
-      } else {
-        throw new Error(`GitHub API error (message: ${e.message}).`);
-      }
+      throw e;
     }
   } else if (input.reportPrNumber) {
     try {
-      const res = await axios({
-        url: `https://api.github.com/repos/${input.event.repository.full_name}/pulls/${input.reportPrNumber}`,
+      const res = await fetch(`https://api.github.com/repos/${input.event.repository.full_name}/pulls/${input.reportPrNumber}`, {
         headers: {
           'Authorization': `token ${input.githubToken}`,
         },
       });
-      input.authorName = res.data.user.login;
-      input.authorLink = res.data.user.html_url;
-      input.authorIcon = res.data.user.avatar_url;
-      input.title = `#${res.data.number} ${res.data.title}`;
-      input.titleLink = res.data.html_url;
-    } catch (e) {
-      if (e.response.status == 404) {
-        throw new Error('Pull request not found. "report-pr-number" input may not be correct.');
-      } else {
-        throw new Error(`GitHub API error (message: ${e.message}).`);
+      if (!res.ok) {
+        if (res.status == 404) {
+          throw new Error('Pull request not found. "report-pr-number" input may not be correct.');
+        } else {
+          throw new Error(`GitHub API error (status: ${res.status}).`);
+        }
       }
+      const data = await res.json();
+      input.authorName = data.user.login;
+      input.authorLink = data.user.html_url;
+      input.authorIcon = data.user.avatar_url;
+      input.title = `#${data.number} ${data.title}`;
+      input.titleLink = data.html_url;
+    } catch (e) {
+      throw e;
     }
   }
 
@@ -216,21 +221,21 @@ async function run(input) {
     'thread_ts': input.threadTimestamp,
   };
 
-  const res = await axios({
+  const res = await fetch('https://slack.com/api/chat.postMessage', {
     method: 'post',
-    url: 'https://slack.com/api/chat.postMessage',
-    data: data,
-    responseType: 'json',
+    body: JSON.stringify(data),
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Authorization': `Bearer ${SLACK_APP_TOKEN}`,
     },
   });
 
-  if (!res.data.ok) {
-    throw new Error(`Slack API error (message: ${res.data.error}).`);
+  const resData = await res.json();
+
+  if (!resData.ok) {
+    throw new Error(`Slack API error (message: ${resData.error}).`);
   }
-  core.setOutput('timestamp', res.data.ts);
+  core.setOutput('timestamp', resData.ts);
 }
 
 run(input)

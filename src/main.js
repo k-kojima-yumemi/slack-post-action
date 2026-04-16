@@ -136,58 +136,50 @@ async function run(input) {
   }
 
   if (input.reportSha) {
-    try {
-      const res = await fetch(`https://api.github.com/repos/${input.event.repository.full_name}/commits/${input.reportSha}`, {
-        headers: {
-          'Authorization': `token ${input.githubToken}`,
-        },
-      });
-      if (!res.ok) {
-        if (res.status == 404) {
-          throw new Error('Commit data not found. "report-sha" input may not be correct.');
-        } else {
-          throw new Error(`GitHub API error (status: ${res.status}).`);
-        }
-      }
-      const data = await res.json();
-      input.authorName = data.author.login;
-      input.authorLink = data.author.html_url;
-      input.authorIcon = data.author.avatar_url;
-      const messages = data.commit.message.split('\n');
-      input.title = `${messages[0]} (${data.sha.slice(0, 8)})`;
-      input.titleLink = data.html_url;
-      if (messages.length == 1) {
-        input.body = '';
+    const res = await fetch(`https://api.github.com/repos/${input.event.repository.full_name}/commits/${input.reportSha}`, {
+      headers: {
+        'Authorization': `token ${input.githubToken}`,
+      },
+    });
+    if (!res.ok) {
+      if (res.status == 404) {
+        throw new Error('Commit data not found. "report-sha" input may not be correct.');
       } else {
-        messages.splice(0, 1); // delete first line message
-        input.body = messages.join('\n');
+        throw new Error(`GitHub API error (status: ${res.status}).`);
       }
-    } catch (e) {
-      throw e;
+    }
+    const data = await res.json();
+    input.authorName = data.author.login;
+    input.authorLink = data.author.html_url;
+    input.authorIcon = data.author.avatar_url;
+    const messages = data.commit.message.split('\n');
+    input.title = `${messages[0]} (${data.sha.slice(0, 8)})`;
+    input.titleLink = data.html_url;
+    if (messages.length == 1) {
+      input.body = '';
+    } else {
+      messages.splice(0, 1); // delete first line message
+      input.body = messages.join('\n');
     }
   } else if (input.reportPrNumber) {
-    try {
-      const res = await fetch(`https://api.github.com/repos/${input.event.repository.full_name}/pulls/${input.reportPrNumber}`, {
-        headers: {
-          'Authorization': `token ${input.githubToken}`,
-        },
-      });
-      if (!res.ok) {
-        if (res.status == 404) {
-          throw new Error('Pull request not found. "report-pr-number" input may not be correct.');
-        } else {
-          throw new Error(`GitHub API error (status: ${res.status}).`);
-        }
+    const res = await fetch(`https://api.github.com/repos/${input.event.repository.full_name}/pulls/${input.reportPrNumber}`, {
+      headers: {
+        'Authorization': `token ${input.githubToken}`,
+      },
+    });
+    if (!res.ok) {
+      if (res.status == 404) {
+        throw new Error('Pull request not found. "report-pr-number" input may not be correct.');
+      } else {
+        throw new Error(`GitHub API error (status: ${res.status}).`);
       }
-      const data = await res.json();
-      input.authorName = data.user.login;
-      input.authorLink = data.user.html_url;
-      input.authorIcon = data.user.avatar_url;
-      input.title = `#${data.number} ${data.title}`;
-      input.titleLink = data.html_url;
-    } catch (e) {
-      throw e;
     }
+    const data = await res.json();
+    input.authorName = data.user.login;
+    input.authorLink = data.user.html_url;
+    input.authorIcon = data.user.avatar_url;
+    input.title = `#${data.number} ${data.title}`;
+    input.titleLink = data.html_url;
   }
 
   let attachment;

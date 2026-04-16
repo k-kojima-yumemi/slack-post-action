@@ -128,9 +128,9 @@ async function run(input) {
   if (input.logButton) {
     input.actions.push(
       {
-        "type": "button",
-        "text": input.logButton,
-        "url": `https://github.com/${input.event.repository.full_name}/actions/runs/${input.runId}`,
+        'type': 'button',
+        'text': input.logButton,
+        'url': `https://github.com/${input.event.repository.full_name}/actions/runs/${input.runId}`,
       }
     );
   }
@@ -187,29 +187,29 @@ async function run(input) {
     attachment = {};
   } else {
     attachment = {
-      "color": input.color,
-      "author_name": input.authorName,
-      "author_link": input.authorLink,
-      "author_icon": input.authorIcon,
-      "title": input.title,
-      "title_link": input.titleLink,
-      "text": input.body,
-      "fields": input.fields,
-      "image_url": input.image,
-      "thumb_url": input.thumbnail,
-      "footer": input.footer,
-      "footer_icon": input.footerIcon,
-      "ts": Math.floor(new Date().getTime() / 1000),
-      "actions": input.actions,
+      'color': input.color,
+      'author_name': input.authorName,
+      'author_link': input.authorLink,
+      'author_icon': input.authorIcon,
+      'title': input.title,
+      'title_link': input.titleLink,
+      'text': input.body,
+      'fields': input.fields,
+      'image_url': input.image,
+      'thumb_url': input.thumbnail,
+      'footer': input.footer,
+      'footer_icon': input.footerIcon,
+      'ts': Math.floor(new Date().getTime() / 1000),
+      'actions': input.actions,
     };
   }
 
   const data = {
-    "channel": input.channel,
-    "username": input.userName,
-    "icon_url": input.userIcon,
-    "text": input.message,
-    "attachments": [attachment],
+    'channel': input.channel,
+    'username': input.userName,
+    'icon_url': input.userIcon,
+    'text': input.message,
+    'attachments': [attachment],
     'thread_ts': input.threadTimestamp,
   };
 

@@ -8,7 +8,7 @@ const SLACK_APP_TOKEN = process.env['SLACK_APP_TOKEN'];
 const GITHUB_TOKEN = process.env['GITHUB_TOKEN'];
 
 let input;
-if (NODE_ENV != 'local') {
+if (NODE_ENV !== 'local') {
   input = {
     channel: core.getInput('channel', { required: true }),
     message: core.getInput('message'),
@@ -54,7 +54,7 @@ if (NODE_ENV != 'local') {
   if (core.getInput('title-link')) {
     input.titleLink = core.getInput('title-link')
   }
-  if (core.getInput('footer_icon') != core.getInput('footer-icon')) {
+  if (core.getInput('footer_icon') !== core.getInput('footer-icon')) {
     input.footerIcon = core.getInput('footer-icon')
   }
   if (core.getInput('log-button')) {
@@ -142,7 +142,7 @@ async function run(input) {
       },
     });
     if (!res.ok) {
-      if (res.status == 404) {
+      if (res.status === 404) {
         throw new Error('Commit data not found. "report-sha" input may not be correct.');
       } else {
         throw new Error(`GitHub API error (status: ${res.status}).`);
@@ -155,7 +155,7 @@ async function run(input) {
     const messages = data.commit.message.split('\n');
     input.title = `${messages[0]} (${data.sha.slice(0, 8)})`;
     input.titleLink = data.html_url;
-    if (messages.length == 1) {
+    if (messages.length === 1) {
       input.body = '';
     } else {
       messages.splice(0, 1); // delete first line message
@@ -168,7 +168,7 @@ async function run(input) {
       },
     });
     if (!res.ok) {
-      if (res.status == 404) {
+      if (res.status === 404) {
         throw new Error('Pull request not found. "report-pr-number" input may not be correct.');
       } else {
         throw new Error(`GitHub API error (status: ${res.status}).`);
@@ -183,7 +183,7 @@ async function run(input) {
   }
 
   let attachment;
-  if (input.authorName == '' && input.title == '' && input.body == '' && input.fields == '' && input.image == '' && input.thumbnail == '' && input.actions == '') {
+  if (input.authorName === '' && input.title === '' && input.body === '' && input.fields === '' && input.image === '' && input.thumbnail === '' && input.actions === '') {
     attachment = {};
   } else {
     attachment = {
